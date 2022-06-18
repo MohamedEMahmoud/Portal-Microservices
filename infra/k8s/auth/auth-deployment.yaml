@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: microservicesarchitecture99/auth
+          env:
+            - name: MONGO_URI
+              value: mongodb://auth-mongo-cluster-ip-service:27017/auth
+            - name: CLOUDINARY_NAME
+              value: microservices
+            - name: CLOUDINARY_API_KEY
+              value: '811727343751112'
+            - name: CLOUDINARY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudinary-secret
+                  key: CLOUDINARY_SECRET_KEY
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: MAIL_USER
+              value: 'microservice.nodemailer@gmail.com'
+            - name: MAIL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: mail-api-secret-pass
+                  key: MAIL_PASS
+            - name: MAIL_SERVER_PORT
+              value: '465'
+            - name: CLIENT_ID
+              value: '71837430516-rs3tf89gmv1c4f5v38sn4iq11e18nb9s.apps.googleusercontent.com'
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: client-api-secret-portal
+                  key: CLIENT_SECRET
+            - name: REFRESH_TOKEN
+              value: '1//04GOvrAeym8V2CgYIARAAGAQSNwF-L9Ir6YA-8y-9Lr3jOtR45QTlBLDosbmJWoP32zG0t3ZkFu45kNGvvKT6TyYUCHZZcqvo2P8'
+            - name: REDIRECT_URI
+              value: 'https://developers.google.com/oauthplayground'
+            - name: MAIL_SERVER_PORT
+              value: '465'
+            - name: PORT
+              value: '3e3'
+            - name: RESET_PASSWORD_EXPIRATION_KEY
+              value: '36e5'
+            - name: OTP_CODE_EXPIRATION
+              value: '36e5'

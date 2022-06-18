@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+        - name: product
+          image: microservicesarchitecture99/product
+          env:
+            - name: MONGO_URI
+              value: mongodb://product-mongo-cluster-ip-service:27017/product
+            - name: CLOUDINARY_NAME
+              value: microservices
+            - name: CLOUDINARY_API_KEY
+              value: '811727343751112'
+            - name: CLOUDINARY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudinary-secret
+                  key: CLOUDINARY_SECRET_KEY
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
