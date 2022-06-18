@@ -281,14 +281,14 @@ const deleteUsersByAdmin = async (
   }
 
   if (user?.role !== RolesType.Admin) {
-    throw new BadRequestError("you don'\t have permission to do this action");
+    throw new BadRequestError("you don't have permission to do this action");
   }
 
   user = await User.findByIdAndDelete(req.query.id);
 
   if (user?.role === RolesType.Admin) {
     throw new BadRequestError(
-      "you don'\t have permission to do this action because this user is also admin"
+      "you don't have permission to do this action because this user is also admin"
     );
   }
 

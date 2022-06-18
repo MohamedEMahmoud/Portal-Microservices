@@ -16,16 +16,14 @@ const app = express();
 app.set('trust proxy', true);
 app.use([
   json(),
+  //Passport Initialized
+  passport.initialize(),
+  //Setting Up Session
+  passport.session(),
   cookieSession({ signed: false, secure: process.env.NODE_ENV !== 'test' }),
   currentUser,
   usersRouter,
 ]);
-
-//Passport Initialized
-app.use(passport.initialize());
-
-//Setting Up Session
-app.use(passport.session());
 
 app.use(
   '*',
