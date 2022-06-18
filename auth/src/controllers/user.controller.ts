@@ -6,12 +6,15 @@ import {
   BadRequestError,
   GenderType,
   ProfilePictureType,
+  RolesType,
 } from '@portal-microservices/common';
 import { User } from '../models/user.model';
 import { randomBytes } from 'crypto';
 import { Password } from '../services/Password.services';
 import sendMail from '../services/messages.services';
 import getNetworkAddress from '../services/address.services';
+import mongoose from 'mongoose';
+
 /**
  * Sign UP controller
  * @param req
@@ -20,7 +23,7 @@ import getNetworkAddress from '../services/address.services';
  */
 
 const signUp = async (req: Request, res: Response): Promise<void> => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   const { email, username } = req.body;
   const existingUser = await User.findOne({ email });
@@ -73,15 +76,15 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
   user.macAddress.push({ MAC: String(getNetworkAddress().MAC) });
 
   let activeKey = randomBytes(8).toString('hex');
-  const mail: { success: boolean; message: string; } | undefined = await sendMail({
-    email: user.email,
-    username: user.username,
-    activeKey: activeKey,
-    type: 'signup'
-  });
+  const mail: { success: boolean; message: string } | undefined =
+    await sendMail({
+      email: user.email,
+      username: user.username,
+      activeKey: activeKey,
+      type: 'signup',
+    });
 
   if (mail!.success) {
-
     user.activeKey = activeKey;
     // generate JWT and then store it on session object
     generateToken(req, user.id);
@@ -114,9 +117,10 @@ const signIn = async (req: Request, res: Response): Promise<void> => {
     throw new BadRequestError('Invalid credentials');
   }
 
-
   if (
-    !user.macAddress.map((addr) => addr.MAC).includes(String(getNetworkAddress().MAC))
+    !user.macAddress
+      .map((addr) => addr.MAC)
+      .includes(String(getNetworkAddress().MAC))
   ) {
     user.macAddress.push({ MAC: String(getNetworkAddress().MAC) });
   }
@@ -155,7 +159,7 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
     throw new BadRequestError('Invalid age');
   }
 
-  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   if (files.profilePicture) {
     await new Promise((resolve, reject) => {
@@ -226,6 +230,80 @@ const deleteUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
+ * Get all users expect admin controller
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+
+const allUsers = async (req: Request, res: Response): Promise<void> => {
+  const user = await User.findById(req.currentUser!.id);
+  if (!user) {
+    throw new BadRequestError('User not found.');
+  }
+
+  if (user?.role !== RolesType.Admin) {
+    throw new BadRequestError("you don't have permission to show users");
+  }
+
+  const users = await User.find({});
+
+  const filteredUsers = users.filter((user) => user.role !== 'admin');
+
+  if (!filteredUsers) {
+    throw new BadRequestError('there is no users!');
+  }
+
+  res.status(200).send({ status: 200, filteredUsers, success: true });
+};
+
+/**
+ * Delete users by admin controller
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+
+const deleteUsersByAdmin = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  if (!mongoose.Types.ObjectId.isValid(String(req.query.id))) {
+    throw new BadRequestError('id is invalid');
+  }
+
+  if (!req.query.id) {
+    throw new BadRequestError('id query is required');
+  }
+  let user = await User.findById(req.currentUser!.id);
+  if (!user) {
+    throw new BadRequestError('User not found.');
+  }
+
+  if (user?.role !== RolesType.Admin) {
+    throw new BadRequestError("you don'\t have permission to do this action");
+  }
+
+  user = await User.findByIdAndDelete(req.query.id);
+
+  if (user?.role === RolesType.Admin) {
+    throw new BadRequestError(
+      "you don'\t have permission to do this action because this user is also admin"
+    );
+  }
+
+  if (!user) {
+    throw new BadRequestError('user not found!');
+  }
+
+  res.send({
+    status: 200,
+    message: 'Successfully Deleted User.',
+    success: true,
+  });
+};
+
+/**
  * Activation user account controller
  * @param req
  * @param res
@@ -267,17 +345,17 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
 
   const resetPasswordToken = randomBytes(8).toString('hex');
 
-  const mail: { success: boolean; message: string; } | undefined = await sendMail({
-    email: user.email,
-    username: user.username,
-    resetPasswordToken: resetPasswordToken,
-    type: 'forgottenPassword'
-  });
+  const mail: { success: boolean; message: string } | undefined =
+    await sendMail({
+      email: user.email,
+      username: user.username,
+      resetPasswordToken: resetPasswordToken,
+      type: 'forgottenPassword',
+    });
 
   if (mail!.success) {
     user.resetPasswordToken = resetPasswordToken;
-    const time =
-      Date.now() + Number(process.env.RESET_PASSWORD_EXPIRATION_KEY);
+    const time = Date.now() + Number(process.env.RESET_PASSWORD_EXPIRATION_KEY);
     user.resetPasswordExpires = new Date(time).toISOString();
     await user.save();
 
@@ -357,13 +435,14 @@ const resendKey = async (req: Request, res: Response): Promise<void> => {
 
   const resendKey = randomBytes(8).toString('hex');
 
-  const mail: { success: boolean; message: string; } | undefined = await sendMail({
-    email: user.email,
-    username: user.username,
-    service: req.query.service,
-    resendKey: resendKey,
-    type: 'resendKey'
-  });
+  const mail: { success: boolean; message: string } | undefined =
+    await sendMail({
+      email: user.email,
+      username: user.username,
+      service: req.query.service,
+      resendKey: resendKey,
+      type: 'resendKey',
+    });
 
   if (mail!.success) {
     if (req.query.service === 'reset-password') {
@@ -475,12 +554,13 @@ const getOtpCode = async (req: Request, res: Response): Promise<void> => {
 
   const otpCode = Math.floor(Math.random() * 90000);
 
-  const mail: { success: boolean; message: string; } | undefined = await sendMail({
-    email: user.email,
-    username: user.username,
-    otpCode: otpCode,
-    type: 'OTP'
-  });
+  const mail: { success: boolean; message: string } | undefined =
+    await sendMail({
+      email: user.email,
+      username: user.username,
+      otpCode: otpCode,
+      type: 'OTP',
+    });
 
   if (mail!.success) {
     user.otpCode = otpCode;
@@ -541,7 +621,6 @@ const getGoogleCallback = async (
   res.status(200).send({ status: 200, success: true });
 };
 
-
 export {
   signUp,
   signIn,
@@ -559,4 +638,6 @@ export {
   twoFactorAuth,
   getGoogleLogin,
   getGoogleCallback,
+  allUsers,
+  deleteUsersByAdmin,
 };

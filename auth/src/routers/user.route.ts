@@ -16,6 +16,8 @@ import {
   twoFactorAuth,
   getGoogleLogin,
   getGoogleCallback,
+  allUsers,
+  deleteUsersByAdmin,
 } from '../controllers/user.controller';
 import {
   requireAuth,
@@ -43,6 +45,8 @@ router.post('/api/auth/signout', upload.none(), signOut);
 
 router.get('/api/auth/current-user', currentUser, getCurrentUser);
 
+router.get('/api/auth/users', requireAuth, allUsers);
+
 router.patch(
   '/api/auth',
   [upload.fields([{ name: 'profilePicture', maxCount: 1 }])],
@@ -60,13 +64,25 @@ router.patch(
 
 router.delete('/api/auth', upload.none(), requireAuth, deleteUser);
 
+router.delete(
+  '/api/auth/users',
+  upload.none(),
+  requireAuth,
+  deleteUsersByAdmin
+);
+
 router.patch('/api/auth/active', upload.none(), requireAuth, userActive);
 
 router.patch('/api/auth/forget-password', upload.none(), forgetPassword);
 
 router.patch('/api/auth/resend-key', upload.none(), resendKey);
 
-router.patch('/api/auth/reset-password', upload.none(), updatePassword, resetNewPassword);
+router.patch(
+  '/api/auth/reset-password',
+  upload.none(),
+  updatePassword,
+  resetNewPassword
+);
 
 router.patch(
   '/api/auth/check-password-token',
@@ -89,6 +105,5 @@ router.get(
   passport.authenticate('google'),
   getGoogleCallback
 );
-
 
 export { router as usersRouter };
