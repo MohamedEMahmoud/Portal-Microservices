@@ -515,14 +515,9 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
         user.password,
         current_password
       );
-      console.log(passwordValid);
       if (passwordValid) {
-        console.log('new encryption', await Password.toHash(new_password));
-        user.password = await Password.toHash(new_password);
-        console.log(user.password);
-        console.log(new_password);
+        user.password = new_password;
         await user.save();
-        console.log('ch: ' + user?.password);
       } else {
         throw new BadRequestError('Current Password is Incorrect');
       }
