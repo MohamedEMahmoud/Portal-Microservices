@@ -5,35 +5,38 @@ import { GenderType, RolesType } from '@portal-microservices/common';
 
 interface UserAttrs {
   username: string;
-  email: string;
-  password: string;
-  gender: GenderType;
+  email?: string;
+  password?: string;
+  gender?: GenderType;
   profilePicture?: string;
-  age: number;
-  phone: string;
-  role: RolesType;
-  macAddress: { MAC: string; }[];
+  age?: number;
+  phone?: string;
+  role?: RolesType;
+  macAddress?: { MAC: string }[];
   activeKey?: string;
   googleId?: string;
+  facebookId?: string;
 }
 
 interface UserDoc extends mongoose.Document {
-  email: string;
+  email?: string;
   username: string;
-  password: string;
-  gender: GenderType;
+  password?: string;
+  gender?: GenderType;
   profilePicture: string;
-  age: number;
-  phone: string;
-  role: RolesType;
+  age?: number;
+  phone?: string;
+  role?: RolesType;
+  macAddress?: { MAC: string }[];
   version: number;
-  macAddress: { MAC: string; }[];
   activeKey: string;
   active: boolean;
   resetPasswordToken: string;
   resetPasswordExpires: string;
   otpCode: number;
   otpCodeExpires: string;
+  googleId?: string;
+  facebookId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,7 +59,6 @@ const userSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: true,
       trim: true,
       unique: true,
       max: 50,
@@ -65,13 +67,11 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
       minlength: [8, 'Password must be more than 8 characters'],
     },
 
     gender: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
       enum: Object.values(GenderType),
@@ -83,21 +83,20 @@ const userSchema = new mongoose.Schema(
 
     age: {
       type: Number,
-      required: true,
       trim: true,
       min: 15,
     },
 
     phone: {
       type: Number,
-      required: [true, 'phone number is required'],
+
       trim: true,
     },
 
     role: {
       type: String,
-      required: true,
       enum: Object.values(RolesType),
+      default: RolesType.Customer,
     },
 
     macAddress: {
@@ -129,6 +128,10 @@ const userSchema = new mongoose.Schema(
     },
 
     googleId: {
+      type: String,
+    },
+
+    facebookId: {
       type: String,
     },
   },

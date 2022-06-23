@@ -13,6 +13,11 @@ declare global {
   }
 }
 
+declare module 'express-session' {
+  interface SessionData {
+    jwt: string | null;
+  }
+}
 export const currentUser = (
   req: Request,
   _res: Response,

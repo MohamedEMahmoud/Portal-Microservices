@@ -48,6 +48,18 @@ spec:
                 secretKeyRef:
                   name: client-api-secret-portal
                   key: CLIENT_SECRET
+            - name: APP_ID
+              value: '5949040445111020'
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: APP_SECRET
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: session-secret
+                  key: SESSION_SECRET
             - name: REFRESH_TOKEN
               value: '1//04GOvrAeym8V2CgYIARAAGAQSNwF-L9Ir6YA-8y-9Lr3jOtR45QTlBLDosbmJWoP32zG0t3ZkFu45kNGvvKT6TyYUCHZZcqvo2P8'
             - name: REDIRECT_URI
@@ -60,3 +72,14 @@ spec:
               value: '36e5'
             - name: OTP_CODE_EXPIRATION
               value: '36e5'
+            - name: TWILIO_ACCOUNT_SID
+              value: AC40964f75d8df8dc8dfe1e787ce877eb3
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: twilio-auth-token
+                  key: TWILIO_AUTH_TOKEN
+            - name: TWILIO_PHONE_NUMBER
+              value: '+19362515983'
+            - name: COUNTRY_CODE
+              value: '+20'

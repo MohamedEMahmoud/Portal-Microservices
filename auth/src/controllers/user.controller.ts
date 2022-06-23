@@ -14,6 +14,7 @@ import { Password } from '../services/Password.services';
 import sendMail from '../services/messages.services';
 import getNetworkAddress from '../services/address.services';
 import mongoose from 'mongoose';
+import { client } from '../services/twilio.services';
 
 /**
  * Sign UP controller
@@ -73,7 +74,7 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
     }
   }
 
-  user.macAddress.push({ MAC: String(getNetworkAddress().MAC) });
+  user.macAddress!.push({ MAC: String(getNetworkAddress().MAC) });
 
   let activeKey = randomBytes(8).toString('hex');
   const mail: { success: boolean; message: string } | undefined =
@@ -111,18 +112,18 @@ const signIn = async (req: Request, res: Response): Promise<void> => {
     throw new BadRequestError('Invalid credentials');
   }
 
-  const passwordMatch = await Password.compare(user.password, password);
+  const passwordMatch = await Password.compare(user.password!, password);
 
   if (!passwordMatch) {
     throw new BadRequestError('Invalid credentials');
   }
 
   if (
-    !user.macAddress
-      .map((addr) => addr.MAC)
+    !user
+      .macAddress!.map((addr) => addr.MAC)
       .includes(String(getNetworkAddress().MAC))
   ) {
-    user.macAddress.push({ MAC: String(getNetworkAddress().MAC) });
+    user.macAddress!.push({ MAC: String(getNetworkAddress().MAC) });
   }
 
   // generate JWT and then store it on session object
@@ -133,7 +134,7 @@ const signIn = async (req: Request, res: Response): Promise<void> => {
 
 const generateToken = (req: Request, id: string) => {
   const userJwt = jwt.sign({ id }, process.env.JWT_KEY!);
-  req.session = { jwt: userJwt };
+  req.session.jwt = userJwt;
 };
 /**
  * Sign out controller by deleting his session
@@ -143,7 +144,7 @@ const generateToken = (req: Request, id: string) => {
  */
 
 const signOut = async (req: Request, res: Response): Promise<void> => {
-  req.session = null;
+  req.session.jwt = null;
   res.send({ status: 204, message: 'Successfully signOut', success: true });
 };
 
@@ -222,7 +223,7 @@ const deleteUser = async (req: Request, res: Response): Promise<void> => {
     throw new BadRequestError('User is not found!');
   }
 
-  req.session = null;
+  req.session.jwt = null;
 
   res
     .status(200)
@@ -345,26 +346,46 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
 
   const resetPasswordToken = randomBytes(8).toString('hex');
 
-  const mail: { success: boolean; message: string } | undefined =
-    await sendMail({
-      email: user.email,
-      username: user.username,
-      resetPasswordToken: resetPasswordToken,
-      type: 'forgottenPassword',
-    });
+  if (req.query.service === 'MAIL') {
+    const mail: { success: boolean; message: string } | undefined =
+      await sendMail({
+        email: user.email,
+        username: user.username,
+        resetPasswordToken: resetPasswordToken,
+        type: 'forgottenPassword',
+      });
 
-  if (mail!.success) {
-    user.resetPasswordToken = resetPasswordToken;
-    const time = Date.now() + Number(process.env.RESET_PASSWORD_EXPIRATION_KEY);
-    user.resetPasswordExpires = new Date(time).toISOString();
-    await user.save();
+    if (mail!.success) {
+      user.resetPasswordToken = resetPasswordToken;
+      const time =
+        Date.now() + Number(process.env.RESET_PASSWORD_EXPIRATION_KEY);
+      user.resetPasswordExpires = new Date(time).toISOString();
+      await user.save();
+
+      res.status(200).send({
+        status: 200,
+        user,
+        message: 'Email Sent Successfully',
+        success: true,
+      });
+    }
+  } else if (req.query.service === 'SMS') {
+    const message = await client.messages.create({
+      body: `This is the resetPasswordToken : ${resetPasswordToken}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: `+19159969739`,
+    });
 
     res.status(200).send({
       status: 200,
       user,
-      message: 'Email Sent Successfully',
+      message,
       success: true,
     });
+  } else {
+    throw new BadRequestError(
+      'you must select one option to receive resetPasswordToken'
+    );
   }
 };
 
@@ -499,7 +520,7 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
       }
 
       let isTheSamePassword = await Password.compare(
-        user.password,
+        user.password!,
         new_password
       );
 
@@ -512,7 +533,7 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
 
     if (new_password === confirmation_password) {
       const passwordValid = await Password.compare(
-        user.password,
+        user.password!,
         current_password
       );
       if (passwordValid) {
@@ -609,7 +630,26 @@ const getGoogleLogin = async (_req: Request, res: Response): Promise<void> => {
   res.status(200).send({ status: 200, success: true });
 };
 
+/**
+ * Get Google Callback controller
+ * @param _req
+ * @param res
+ * @return {Promise<void>}
+ */
 const getGoogleCallback = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
+  res.status(200).send({ status: 200, success: true });
+};
+
+/**
+ * Get Facebook Callback controller
+ * @param _req
+ * @param res
+ * @return {Promise<void>}
+ */
+const getFacebookCallback = async (
   _req: Request,
   res: Response
 ): Promise<void> => {
@@ -635,4 +675,5 @@ export {
   getGoogleCallback,
   allUsers,
   deleteUsersByAdmin,
+  getFacebookCallback,
 };

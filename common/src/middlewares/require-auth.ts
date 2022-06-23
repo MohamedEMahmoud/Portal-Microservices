@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { NotFoundError } from '../errors/not-found-error';
+import { NotAuthorizedError } from '../errors/not-authorized';
 
 export const requireAuth = (
   req: Request,
@@ -7,7 +7,7 @@ export const requireAuth = (
   next: NextFunction
 ) => {
   if (!req.currentUser) {
-    throw new NotFoundError();
+    throw new NotAuthorizedError();
   }
 
   next();
