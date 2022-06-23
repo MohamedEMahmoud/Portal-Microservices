@@ -18,6 +18,7 @@ import {
   getGoogleCallback,
   allUsers,
   deleteUsersByAdmin,
+  getFacebookCallback,
 } from '../controllers/user.controller';
 import {
   requireAuth,
@@ -104,6 +105,12 @@ router.get(
   '/api/auth/google/callback',
   passport.authenticate('google'),
   getGoogleCallback
+);
+
+router.get(
+  '/api/auth/facebook/callback',
+  passport.authenticate('facebook'),
+  getFacebookCallback
 );
 
 export { router as usersRouter };

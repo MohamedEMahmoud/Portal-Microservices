@@ -18,6 +18,12 @@ import { app } from './app';
     'REFRESH_TOKEN',
     'REDIRECT_URI',
     'OTP_CODE_EXPIRATION',
+    'SESSION_SECRET',
+    'TWILIO_ACCOUNT_SID',
+    'TWILIO_AUTH_TOKEN',
+    'COUNTRY_CODE',
+    'APP_SECRET',
+    'APP_ID',
   ];
 
   Environment.forEach((el) => {
