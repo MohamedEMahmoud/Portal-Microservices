@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { v2 as Cloudinary } from 'cloudinary';
 import { app } from './app';
+import { LoggerService } from '../src/services/logger.services';
+
+let logger = new LoggerService('user.controller');
 
 (async () => {
   const Environment = [
@@ -22,8 +25,9 @@ import { app } from './app';
     'TWILIO_ACCOUNT_SID',
     'TWILIO_AUTH_TOKEN',
     'COUNTRY_CODE',
-    'APP_SECRET',
-    'APP_ID',
+    'FACEBOOK_APP_ID',
+    'FACEBOOK_APP_SECRET',
+    'LOG_FILE_PATH',
   ];
 
   Environment.forEach((el) => {

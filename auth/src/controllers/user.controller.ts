@@ -15,6 +15,10 @@ import sendMail from '../services/messages.services';
 import getNetworkAddress from '../services/address.services';
 import mongoose from 'mongoose';
 import { client } from '../services/twilio.services';
+import { LoggerService } from '../services/logger.services';
+import fs from 'fs';
+
+let logger = new LoggerService('user.controller');
 
 /**
  * Sign UP controller
@@ -30,11 +34,13 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
+    logger.error(`Email : ${existingUser.email} is already exists`);
     throw new BadRequestError('Email in use!');
   }
 
   const existUsername = await User.findOne({ username });
   if (existUsername) {
+    logger.error(`${existUsername.username} is already exists`);
     throw new BadRequestError('Username is already exists.');
   }
 
@@ -91,6 +97,7 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
     generateToken(req, user.id);
 
     await user.save();
+    logger.info(`${user.email} become a new user in the application`);
 
     res.status(201).send({ status: 201, user, success: true });
   }
@@ -109,12 +116,14 @@ const signIn = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findOne({ email });
 
   if (!user) {
+    logger.error('Invalid credentials');
     throw new BadRequestError('Invalid credentials');
   }
 
   const passwordMatch = await Password.compare(user.password!, password);
 
   if (!passwordMatch) {
+    logger.error('Invalid credentials');
     throw new BadRequestError('Invalid credentials');
   }
 
@@ -129,6 +138,7 @@ const signIn = async (req: Request, res: Response): Promise<void> => {
   // generate JWT and then store it on session object
   generateToken(req, user.id);
 
+  logger.info(`the user : ${user.email} successfull login in application`);
   res.status(200).send({ status: 200, user, success: true });
 };
 
@@ -145,6 +155,7 @@ const generateToken = (req: Request, id: string) => {
 
 const signOut = async (req: Request, res: Response): Promise<void> => {
   req.session.jwt = null;
+  logger.info('successfull signOut');
   res.send({ status: 204, message: 'Successfully signOut', success: true });
 };
 
@@ -157,7 +168,8 @@ const signOut = async (req: Request, res: Response): Promise<void> => {
 
 const updateUser = async (req: Request, res: Response): Promise<void> => {
   if (req.body.age < 15) {
-    throw new BadRequestError('Invalid age');
+    logger.error('Invalid age');
+    throw new BadRequestError(`${req.body.age} is Invalid age`);
   }
 
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -192,6 +204,7 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
 
   _.extend(req.user, req.body);
   await req.user.save();
+  logger.info(`${req.user.email} update his information successfully`);
 
   res.status(200).send({ status: 200, user: req.user, success: true });
 };
@@ -220,10 +233,12 @@ const deleteUser = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findByIdAndDelete(req.currentUser!.id);
 
   if (!user) {
+    logger.error(`User is not found.`);
     throw new BadRequestError('User is not found!');
   }
 
   req.session.jwt = null;
+  logger.info(`${user.email} is deleted successfully...`);
 
   res
     .status(200)
@@ -240,10 +255,14 @@ const deleteUser = async (req: Request, res: Response): Promise<void> => {
 const allUsers = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findById(req.currentUser!.id);
   if (!user) {
+    logger.error(`User is not found.`);
     throw new BadRequestError('User not found.');
   }
 
   if (user?.role !== RolesType.Admin) {
+    logger.error(
+      `${user.email} try to show all users but don't have permission.`
+    );
     throw new BadRequestError("you don't have permission to show users");
   }
 
@@ -252,9 +271,11 @@ const allUsers = async (req: Request, res: Response): Promise<void> => {
   const filteredUsers = users.filter((user) => user.role !== 'admin');
 
   if (!filteredUsers) {
+    logger.error(`there is no users!`);
     throw new BadRequestError('there is no users!');
   }
 
+  logger.infoObj(`all users `, users);
   res.status(200).send({ status: 200, filteredUsers, success: true });
 };
 
@@ -270,30 +291,38 @@ const deleteUsersByAdmin = async (
   res: Response
 ): Promise<void> => {
   if (!mongoose.Types.ObjectId.isValid(String(req.query.id))) {
+    logger.error(`${req.query.id} is Invalid`);
     throw new BadRequestError('id is invalid');
   }
 
   if (!req.query.id) {
+    logger.error(`${req.query.id} is required`);
     throw new BadRequestError('id query is required');
   }
   let user = await User.findById(req.currentUser!.id);
   if (!user) {
+    logger.error(`User is not found.`);
     throw new BadRequestError('User not found.');
   }
 
   if (user?.role !== RolesType.Admin) {
+    logger.error(`${user.email} try to delete user but don't have permission.`);
     throw new BadRequestError("you don't have permission to do this action");
   }
 
   user = await User.findByIdAndDelete(req.query.id);
 
   if (user?.role === RolesType.Admin) {
+    logger.error(
+      `${user.email} try to delete this user but this action don't performed because this is user is also admin`
+    );
     throw new BadRequestError(
       "you don't have permission to do this action because this user is also admin"
     );
   }
 
   if (!user) {
+    logger.error(`User is not found.`);
     throw new BadRequestError('user not found!');
   }
 
@@ -314,20 +343,24 @@ const deleteUsersByAdmin = async (
 const userActive = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findById(req.currentUser!.id);
   if (!user) {
+    logger.error(`User is not found.`);
     throw new BadRequestError('user not exist');
   }
 
   if (!req.body.activeKey) {
+    logger.error('Active Key Is Required');
     throw new BadRequestError('Active Key Is Required');
   }
 
   if (req.body.activeKey !== user.activeKey) {
+    logger.error(`this Active Key : ${req.body.activeKey} Is Invalid`);
     throw new BadRequestError('active key is invalid');
   }
 
   user.active = true;
   await user.save();
 
+  logger.info(`${user.email} is activate account successfully`);
   res.status(200).send({ status: 200, user, success: true });
 };
 
@@ -341,6 +374,7 @@ const userActive = async (req: Request, res: Response): Promise<void> => {
 const forgetPassword = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
+    logger.error(`${req.body.email} is Invalid Email`);
     throw new BadRequestError('Invalid Email');
   }
 
@@ -361,6 +395,9 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
         Date.now() + Number(process.env.RESET_PASSWORD_EXPIRATION_KEY);
       user.resetPasswordExpires = new Date(time).toISOString();
       await user.save();
+      logger.info(
+        `${user.email} is received resetPasswordToken successfully in gmail`
+      );
 
       res.status(200).send({
         status: 200,
@@ -376,6 +413,9 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
       to: `+19159969739`,
     });
 
+    logger.info(
+      `${user.email} is received resetPasswordToken successfully in phone`
+    );
     res.status(200).send({
       status: 200,
       user,
@@ -383,6 +423,7 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
       success: true,
     });
   } else {
+    logger.info(`you must select one option to receive resetPasswordToken`);
     throw new BadRequestError(
       'you must select one option to receive resetPasswordToken'
     );
@@ -402,20 +443,31 @@ const checkPasswordToken = async (
 ): Promise<void> => {
   const user = await User.findOne({ email: req.query.email });
   if (!user) {
+    logger.error('User in not found.');
     throw new BadRequestError('user is no exist');
   }
 
   if (req.body.resetPasswordToken) {
     if (new Date() > new Date(user.resetPasswordExpires)) {
+      logger.error(
+        `reset password token : ${user.resetPasswordExpires} Is Expired`
+      );
       throw new BadRequestError('reset password token Is Expired');
     }
 
     if (user.resetPasswordToken !== req.body.resetPasswordToken) {
+      logger.error(
+        `reset password token in req.body : ${req.body.resetPasswordToken} don't equal to user reset password`
+      );
       throw new BadRequestError('reset password token Is Invalid');
     }
 
+    logger.info(
+      `resetPasswordToken : ${req.body.resetPasswordToken} is Invalid`
+    );
     res.status(200).send({ status: 200, user, success: true });
   } else {
+    logger.error(`reset password token is required`);
     throw new BadRequestError('reset password token is required');
   }
 };
@@ -429,9 +481,11 @@ const checkPasswordToken = async (
 
 const resetNewPassword = async (req: Request, res: Response): Promise<void> => {
   if (!req.body.password) {
+    logger.error('Password is required!');
     throw new BadRequestError('Password is required!');
   }
   await req.user.save();
+  logger.info(`${req.user.email} reset password successfully.`);
 
   res.status(200).send({
     status: 200,
@@ -451,6 +505,7 @@ const resetNewPassword = async (req: Request, res: Response): Promise<void> => {
 const resendKey = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findOne({ email: req.query.email });
   if (!user) {
+    logger.error(`${req.query.email} is Invalid Email`);
     throw new BadRequestError('Invalid Email');
   }
 
@@ -476,6 +531,7 @@ const resendKey = async (req: Request, res: Response): Promise<void> => {
     }
 
     await user.save();
+    logger.info(`resend key is sent successfully to ${user.email}`);
 
     res
       .status(200)
@@ -496,6 +552,7 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
   let user = await User.findOne({ email: req.query.email });
 
   if (!user) {
+    logger.error(`${req.query.email} is Invalid Email`);
     throw new BadRequestError('User is not found!');
   }
 
@@ -508,15 +565,20 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
         new_password.includes('asdf') ||
         new_password.length < 8
       ) {
+        logger.error(`${new_password} Password is too week.`);
         throw new BadRequestError('Password is too week.');
       }
 
       if (!specialCharactersValidator.test(new_password)) {
+        logger.error(
+          `${new_password} Password is too week.must contain a special character.`
+        );
         throw new BadRequestError('Password must contain a special character.');
       }
 
       if (new_password.length < 8) {
-        throw new BadRequestError('password must be more 8 characters');
+        logger.error(`${new_password} Password  must be more 8 characters.`);
+        throw new BadRequestError('password must be more 8 characters.');
       }
 
       let isTheSamePassword = await Password.compare(
@@ -525,6 +587,9 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
       );
 
       if (isTheSamePassword) {
+        logger.error(
+          `${isTheSamePassword} Can not change password with the previous one`
+        );
         throw new BadRequestError(
           'Can not change password with the previous one'
         );
@@ -539,13 +604,17 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
       if (passwordValid) {
         user.password = new_password;
         await user.save();
+        logger.info(`${user.email} change password successfully`);
       } else {
+        logger.error(`${current_password} is Incorrect`);
         throw new BadRequestError('Current Password is Incorrect');
       }
     } else {
+      logger.error('Password and ConfirmPassword dose not Match.');
       throw new BadRequestError('Password and ConfirmPassword dose not Match.');
     }
   } else {
+    logger.error('CurrentPassword Field is required.');
     throw new BadRequestError('CurrentPassword Field is required.');
   }
 
@@ -565,6 +634,7 @@ const getOtpCode = async (req: Request, res: Response): Promise<void> => {
   const { email } = req.query;
   const user = await User.findOne({ email });
   if (!user) {
+    logger.error(`${req.query.email} is Invalid Email`);
     throw new BadRequestError('User not found.');
   }
 
@@ -583,6 +653,7 @@ const getOtpCode = async (req: Request, res: Response): Promise<void> => {
     const time = Date.now() + Number(process.env.OTP_CODE_EXPIRATION);
     user.otpCodeExpires = new Date(time).toISOString();
     await user.save();
+    logger.info(`${user.email} receive otpCode Successfully`);
   }
 
   res.status(200).send({
@@ -603,10 +674,12 @@ const twoFactorAuth = async (req: Request, res: Response): Promise<void> => {
   const { email } = req.query;
   const user = await User.findOne({ email });
   if (!user) {
+    logger.error(`${req.query.email} is Invalid Email`);
     throw new BadRequestError('User not found.');
   }
 
   if (!req.body.otpCode) {
+    logger.error('Otp verification code is required');
     throw new BadRequestError('Otp verification code is required.');
   }
 
@@ -614,8 +687,11 @@ const twoFactorAuth = async (req: Request, res: Response): Promise<void> => {
     user.otpCode !== Number(req.body.otpCode) ||
     new Date() > new Date(user.otpCodeExpires)
   ) {
+    logger.error('Otp verification code is Invalid');
     throw new BadRequestError('Otp Code Is Invalid');
   }
+
+  logger.info(`${user.email} is pass otpCode valid.`);
 
   res.status(200).send({ status: 200, user, success: true });
 };
@@ -627,6 +703,7 @@ const twoFactorAuth = async (req: Request, res: Response): Promise<void> => {
  * @return {Promise<void>}
  */
 const getGoogleLogin = async (_req: Request, res: Response): Promise<void> => {
+  logger.info('getGoogleLogin Successfully');
   res.status(200).send({ status: 200, success: true });
 };
 
@@ -640,6 +717,7 @@ const getGoogleCallback = async (
   _req: Request,
   res: Response
 ): Promise<void> => {
+  logger.info('getGoogleCallback Successfully');
   res.status(200).send({ status: 200, success: true });
 };
 
@@ -653,7 +731,52 @@ const getFacebookCallback = async (
   _req: Request,
   res: Response
 ): Promise<void> => {
+  logger.info('getFacebookCallback Successfully');
   res.status(200).send({ status: 200, success: true });
+};
+
+/**
+ * Read logger files controller
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+
+const logReader = async (req: Request, res: Response): Promise<void> => {
+  let user = await User.findById(req.currentUser!.id);
+  if (!user) {
+    logger.error(`User is not found.`);
+    throw new BadRequestError('User not found.');
+  }
+
+  if (user?.role !== RolesType.Admin) {
+    logger.error(
+      `${user.email} try to show logger file but he don't have permission.`
+    );
+    throw new BadRequestError("you don't have permission to do this action");
+  }
+
+  const data = fs.readFileSync(
+    '/app/src/services/log/user.controller.log.json',
+    {
+      encoding: 'utf8',
+    }
+  );
+
+  const dir = '/app/src/services/log';
+  const files = fs.readdirSync(dir);
+
+  for (const file of files) {
+    console.log(file);
+  }
+  console.log(data);
+
+  res.send({
+    status: 200,
+    data: data,
+    message: 'Successfully show logger file',
+    success: true,
+  });
 };
 
 export {
@@ -676,4 +799,5 @@ export {
   allUsers,
   deleteUsersByAdmin,
   getFacebookCallback,
+  logReader,
 };
