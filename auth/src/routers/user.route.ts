@@ -49,7 +49,7 @@ router.get('/api/auth/current-user', currentUser, getCurrentUser);
 
 router.get('/api/auth/users', requireAuth, allUsers);
 
-// router.get('/api/auth/logger', requireAuth, logReader);
+router.get('/api/auth/logger', requireAuth, logReader);
 
 router.patch(
   '/api/auth',

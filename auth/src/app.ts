@@ -30,8 +30,8 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET!,
     resave: false,
-    saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV !== 'test' },
+    saveUninitialized: true,
+    cookie: { secure: true }
   }),
   json(),
   cors(corsOptions),
@@ -41,7 +41,7 @@ app.use(
   passport.session(),
   hpp(),
   helmet(),
-  morgan('tiny'),
+  morgan('dev'),
   compression(),
   currentUser,
   usersRouter

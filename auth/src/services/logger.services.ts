@@ -1,5 +1,4 @@
 import winston from 'winston';
-import path from 'path';
 
 const dateFormat = () => {
   return new Date().toISOString();
@@ -9,44 +8,20 @@ class LoggerService {
   logger!: winston.Logger;
 
   constructor(public route: string) {
-    // let logger = winston.createLogger({
-    //   level: 'info',
-    //   format: winston.format.printf((info) => {
-    //     let message = `${dateFormat()} | ${info.level.toUpperCase()} | ${
-    //       info.message
-    //     }`;
-
-    //     return (message = info.obj
-    //       ? message + `data ${JSON.stringify(info.obj)} |`
-    //       : message);
-    //   }),
-    //   transports: [
-    //     new winston.transports.Console(),
-    //     new winston.transports.File({
-    //       filename: __dirname + `${process.env.LOG_FILE_PATH}/${route}.log`,
-    //     }),
-    //   ],
-    // });
-
     let logger = winston.createLogger({
       level: 'info',
-      format: winston.format.json(),
+      format: winston.format.printf((info) => {
+        let message = `${dateFormat()} | ${info.level.toUpperCase()} | ${info.message
+          }`;
+
+        return (message = info.obj
+          ? message + `data ${JSON.stringify(info.obj)} |`
+          : message);
+      }),
       transports: [
+        new winston.transports.Console(),
         new winston.transports.File({
-          filename: 'user.error.log.json',
-          level: 'error',
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.json()
-          ),
-        }),
-        new winston.transports.File({
-          filename:
-            __dirname + `${process.env.LOG_FILE_PATH}/${route}.log.json`,
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.json()
-          ),
+          filename: __dirname + `${process.env.LOG_FILE_PATH}/${route}.log`,
         }),
       ],
     });

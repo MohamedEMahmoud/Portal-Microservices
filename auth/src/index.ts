@@ -3,7 +3,7 @@ import { v2 as Cloudinary } from 'cloudinary';
 import { app } from './app';
 import { LoggerService } from '../src/services/logger.services';
 
-let logger = new LoggerService('user.controller');
+let logger = new LoggerService('auth');
 
 (async () => {
   const Environment = [
@@ -42,7 +42,7 @@ let logger = new LoggerService('user.controller');
       useUnifiedTopology: true,
     } as mongoose.ConnectOptions);
     mongoose.Promise = global.Promise;
-    console.log('Connection to Mongodb Successfully!');
+    logger.info('Connection to Mongodb Successfully! From Auth Service');
 
     Cloudinary.config({
       cloud_name: process.env.CLOUDINARY_NAME,
@@ -50,6 +50,7 @@ let logger = new LoggerService('user.controller');
       api_secret: process.env.CLOUDINARY_SECRET_KEY,
     });
   } catch (e) {
+    logger.error(`Error is : ${e} From Auth Service`);
     console.log(`Error is : ${e}`);
   }
 

@@ -18,7 +18,7 @@ import { client } from '../services/twilio.services';
 import { LoggerService } from '../services/logger.services';
 import fs from 'fs';
 
-let logger = new LoggerService('user.controller');
+let logger = new LoggerService('auth');
 
 /**
  * Sign UP controller
@@ -28,7 +28,7 @@ let logger = new LoggerService('user.controller');
  */
 
 const signUp = async (req: Request, res: Response): Promise<void> => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
 
   const { email, username } = req.body;
   const existingUser = await User.findOne({ email });
@@ -83,7 +83,7 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
   user.macAddress!.push({ MAC: String(getNetworkAddress().MAC) });
 
   let activeKey = randomBytes(8).toString('hex');
-  const mail: { success: boolean; message: string } | undefined =
+  const mail: { success: boolean; message: string; } | undefined =
     await sendMail({
       email: user.email,
       username: user.username,
@@ -172,7 +172,7 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
     throw new BadRequestError(`${req.body.age} is Invalid age`);
   }
 
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
 
   if (files.profilePicture) {
     await new Promise((resolve, reject) => {
@@ -381,7 +381,7 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
   const resetPasswordToken = randomBytes(8).toString('hex');
 
   if (req.query.service === 'MAIL') {
-    const mail: { success: boolean; message: string } | undefined =
+    const mail: { success: boolean; message: string; } | undefined =
       await sendMail({
         email: user.email,
         username: user.username,
@@ -511,7 +511,7 @@ const resendKey = async (req: Request, res: Response): Promise<void> => {
 
   const resendKey = randomBytes(8).toString('hex');
 
-  const mail: { success: boolean; message: string } | undefined =
+  const mail: { success: boolean; message: string; } | undefined =
     await sendMail({
       email: user.email,
       username: user.username,
@@ -640,7 +640,7 @@ const getOtpCode = async (req: Request, res: Response): Promise<void> => {
 
   const otpCode = Math.floor(Math.random() * 90000);
 
-  const mail: { success: boolean; message: string } | undefined =
+  const mail: { success: boolean; message: string; } | undefined =
     await sendMail({
       email: user.email,
       username: user.username,
@@ -755,25 +755,16 @@ const logReader = async (req: Request, res: Response): Promise<void> => {
     );
     throw new BadRequestError("you don't have permission to do this action");
   }
-
   const data = fs.readFileSync(
-    '/app/src/services/log/user.controller.log.json',
+    '/app/src/services/log/auth.log',
     {
       encoding: 'utf8',
     }
-  );
-
-  const dir = '/app/src/services/log';
-  const files = fs.readdirSync(dir);
-
-  for (const file of files) {
-    console.log(file);
-  }
-  console.log(data);
+  ).split('\n').filter(text => text.length !== 0);
 
   res.send({
     status: 200,
-    data: data,
+    data,
     message: 'Successfully show logger file',
     success: true,
   });

@@ -48,13 +48,13 @@ spec:
                 secretKeyRef:
                   name: client-api-secret-portal
                   key: CLIENT_SECRET
-            - name: APP_ID
+            - name: FACEBOOK_APP_ID
               value: '5949040445111020'
-            - name: APP_SECRET
+            - name: FACEBOOK_APP_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
-                  key: APP_SECRET
+                  name: facebook-app-secret
+                  key: FACEBOOK_APP_SECRET
             - name: SESSION_SECRET
               valueFrom:
                 secretKeyRef:
@@ -83,3 +83,5 @@ spec:
               value: '+19362515983'
             - name: COUNTRY_CODE
               value: '+20'
+            - name: LOG_FILE_PATH
+              value: /log
