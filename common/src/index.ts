@@ -11,6 +11,7 @@ export * from './middlewares/error-handler';
 export * from './middlewares/require-auth';
 export * from './middlewares/uploadFiles';
 export * from './middlewares/validate-request';
+export * from './middlewares/logger.services';
 
 // Types
 export * from './types/gender-type';
