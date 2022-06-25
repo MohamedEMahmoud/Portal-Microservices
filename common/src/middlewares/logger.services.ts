@@ -27,6 +27,8 @@ class LoggerService {
       ],
     });
 
+    console.log(__dirname + `${process.env.LOG_FILE_PATH}/${route}.log`);
+
     this.logger = logger;
   }
 
