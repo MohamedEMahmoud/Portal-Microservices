@@ -55,8 +55,8 @@ passport.use(
 passport.use(
   new FacebookStrategy(
     {
-      clientID: process.env.APP_ID,
-      clientSecret: process.env.APP_SECRET,
+      clientID: process.env.FACEBOOK_APP_ID,
+      clientSecret: process.env.FACEBOOK_APP_SECRET,
       callbackURL:
         'https://portal-microservices.dev/api/auth/facebook/callback',
     },
@@ -77,7 +77,7 @@ passport.use(
           // we don't have a user record with this ID, make a new record!
           User.build({
             facebookId: profile.id,
-            username: profile.username,
+            username: profile.username || 'mohamed14',
             profilePicture: profile.profileUrl,
             gender: profile.gender,
           })
