@@ -16,6 +16,13 @@ import morgan from 'morgan';
 import cors from 'cors';
 import compression from 'compression';
 
+// let MongoDbStore = require('connect-mongodb-session')(session);
+
+// const store = new MongoDbStore({
+//   uri: 'mongodb://127.0.0.1:27018',
+//   collection: 'sessions',
+// });
+
 let whitelist = ['https://portal-microservices.dev', 'https://web.postman.co'];
 let corsOptions: cors.CorsOptions = {
   methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
@@ -28,10 +35,11 @@ app.set('trust proxy', true);
 
 app.use(
   session({
+    // store: store,
     secret: process.env.SESSION_SECRET!,
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: true }
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV !== 'test' },
   }),
   json(),
   cors(corsOptions),

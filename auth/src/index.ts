@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 import { v2 as Cloudinary } from 'cloudinary';
 import { app } from './app';
-import { LoggerService } from '../src/services/logger.services';
+import { LoggerService } from '@portal-microservices/common';
+import { natsWrapper } from './nats-wrapper';
 
-let logger = new LoggerService('auth');
+let logger = new LoggerService('index');
 
 (async () => {
   const Environment = [
@@ -37,6 +38,19 @@ let logger = new LoggerService('auth');
   });
 
   try {
+    await natsWrapper.connect(
+      process.env.NATS_CLUSTER_ID!,
+      process.env.NATS_CLIENT_ID!,
+      process.env.NATS_URL!
+    );
+    natsWrapper.client.on('close', () => {
+      console.log('Nats Connection Closed!');
+      process.exit();
+    });
+
+    process.on('SIGINT', () => natsWrapper.client.close());
+    process.on('SIGTERM', () => natsWrapper.client.close());
+
     await mongoose.connect(process.env.MONGO_URI!, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -51,11 +65,10 @@ let logger = new LoggerService('auth');
     });
   } catch (e) {
     logger.error(`Error is : ${e} From Auth Service`);
-    console.log(`Error is : ${e}`);
   }
 
   const PORT = 3000 || process.env.PORT;
   app.listen(PORT, () =>
-    console.log(`Server Listening On Port ${PORT} From Auth Service`)
+    logger.info(`Server Listening On Port ${PORT} From Auth Service`)
   );
 })();

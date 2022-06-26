@@ -26,7 +26,7 @@ interface UserDoc extends mongoose.Document {
   profilePicture: string;
   age?: number;
   phone?: string;
-  role?: RolesType;
+  role: RolesType;
   macAddress?: { MAC: string }[];
   version: number;
   activeKey: string;

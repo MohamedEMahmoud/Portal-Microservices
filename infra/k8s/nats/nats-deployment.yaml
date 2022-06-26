@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+        - name: nats
+          image: nats-streaming:0.17.0
+          args: [
+              '-p',
+              '4222',
+              '-m',
+              '8222',
+              # make heartbeat request to each of its client
+              '-hbi',
+              '5s',
+              # how long each client take to respond
+              '-hbt',
+              '5s',
+              # number of time that each client can fail
+              # before nats assume that connection is dead
+              '-hbf',
+              '2',
+              '-SD',
+              '-cid',
+              'portal',
+            ]

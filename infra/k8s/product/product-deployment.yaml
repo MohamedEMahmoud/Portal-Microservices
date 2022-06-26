@@ -16,6 +16,14 @@ spec:
         - name: product
           image: microservicesarchitecture99/product
           env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-cluster-ip-service:4222'
+            - name: NATS_CLUSTER_ID
+              value: portal
             - name: MONGO_URI
               value: mongodb://product-mongo-cluster-ip-service:27017/product
             - name: CLOUDINARY_NAME
@@ -32,3 +40,12 @@ spec:
                 secretKeyRef:
                   name: jwt-secret
                   key: JWT_KEY
+            - name: LOG_FILE_PATH
+              value: /log
+            - name: PORT
+              value: '3e3'
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: session-secret
+                  key: SESSION_SECRET

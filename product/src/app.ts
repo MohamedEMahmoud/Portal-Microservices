@@ -6,17 +6,38 @@ import {
   errorHandler,
   NotFoundError,
 } from '@portal-microservices/common';
-import cookieSession from 'cookie-session';
 import { productsRouter } from './routers/product.route';
+import session from 'express-session';
+import hpp from 'hpp';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import cors from 'cors';
+import compression from 'compression';
+
+let whitelist = ['https://portal-microservices.dev', 'https://web.postman.co'];
+let corsOptions: cors.CorsOptions = {
+  methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
+  origin: whitelist,
+};
 
 const app = express();
 app.set('trust proxy', true);
-app.use([
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV !== 'test' },
+  }),
   json(),
-  cookieSession({ signed: false, secure: process.env.NODE_ENV !== 'test' }),
+  cors(corsOptions),
+  hpp(),
+  helmet(),
+  morgan('dev'),
+  compression(),
   currentUser,
-  productsRouter,
-]);
+  productsRouter
+);
 
 // Midlewares
 app.use(

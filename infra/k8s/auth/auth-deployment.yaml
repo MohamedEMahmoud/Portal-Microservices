@@ -16,6 +16,14 @@ spec:
         - name: auth
           image: microservicesarchitecture99/auth
           env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-cluster-ip-service:4222'
+            - name: NATS_CLUSTER_ID
+              value: portal
             - name: MONGO_URI
               value: mongodb://auth-mongo-cluster-ip-service:27017/auth
             - name: CLOUDINARY_NAME

@@ -8,6 +8,8 @@ import {
   deleteAllProduct,
   updateProduct,
   searchProduct,
+  logReader,
+  getOneProductForMerchantId,
 } from '../controllers/product.controller';
 import {
   requireAuth,
@@ -33,13 +35,22 @@ router.get('/api/product', upload.none(), requireAuth, getProduct);
 router.get('/api/product/search', upload.none(), requireAuth, searchProduct);
 
 router.get(
-  '/api/product/merchantId',
+  '/api/product/merchantId/title',
   upload.none(),
   requireAuth,
   getAllProductForMerchantId
 );
 
+router.get(
+  '/api/product/merchantId',
+  upload.none(),
+  requireAuth,
+  getOneProductForMerchantId
+);
+
 router.get('/api/product/all', upload.none(), requireAuth, getProducts);
+
+router.get('/api/product/logger', upload.none(), requireAuth, logReader);
 
 router.patch(
   '/api/product',

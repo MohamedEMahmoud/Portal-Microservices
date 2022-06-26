@@ -1,12 +1,19 @@
-import express, { Request, Response } from 'express';
-import { BadRequestError } from '@portal-microservices/common';
+import { Request, Response } from 'express';
+import {
+  BadRequestError,
+  LoggerService,
+  RolesType,
+} from '@portal-microservices/common';
 import { Product } from '../models/product.model';
 import { v2 as Cloudinary } from 'cloudinary';
 import { randomBytes } from 'crypto';
 import mongoose from 'mongoose';
 import _ from 'lodash';
 import slugify from 'slugify';
+import fs from 'fs';
+import { User } from '../models/user.model';
 
+const logger = new LoggerService('product');
 /**
  * Create new product controller
  * @param req
@@ -18,10 +25,12 @@ const createNewProduct = async (req: Request, res: Response): Promise<void> => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   if (!req.body) {
+    logger.error("Can't not send Empty Request");
     throw new BadRequestError("Can't not send Empty Request");
   }
 
   if (!req.body.price) {
+    logger.error('price field is required.');
     throw new BadRequestError('price field is required.');
   }
 
@@ -103,6 +112,7 @@ const createNewProduct = async (req: Request, res: Response): Promise<void> => {
   }
 
   await newProduct.save();
+  logger.info(`${newProduct.title} is created successfully`);
   res.status(201).json({
     status: 201,
     newProduct,
@@ -123,15 +133,18 @@ const getProduct = async (req: Request, res: Response): Promise<void> => {
     !req.query.productId ||
     !mongoose.Types.ObjectId.isValid(String(req.query.productId))
   ) {
+    logger.error(`${req.query.productId} is invalid`);
     throw new BadRequestError('productId is invalid.');
   }
 
   const product = await Product.findById(req.query.productId);
 
   if (!product) {
+    logger.error(`product is not found!`);
     throw new BadRequestError('product is not found!');
   }
 
+  logger.info(`${product}`);
   res.status(200).json({ status: 200, product, success: true });
 };
 
@@ -146,29 +159,90 @@ const getAllProductForMerchantId = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const product = await Product.find({ merchantId: req.currentUser!.id });
+  let user = await User.findById(req.currentUser!.id);
+  if (!user) {
+    logger.error(`User is not found.`);
+    throw new BadRequestError('User not found.');
+  }
+
+  if (user?.role !== RolesType.Admin) {
+    logger.error(
+      `${user.email} try to show logger file but he don't have permission.`
+    );
+    throw new BadRequestError("you don't have permission to do this action");
+  }
+
+  const { merchantId } = req.query;
+
+  const currentPage: any = req.query.page || 1,
+    perPage = 2;
+  const product = await Product.find({ merchantId })
+    .sort({ created_at: -1 })
+    .skip((currentPage - 1) * perPage)
+    .limit(perPage);
 
   if (product.length === 0) {
+    logger.error(`there is no products`);
     throw new BadRequestError('there is no products');
   }
 
+  logger.info(`${product}`);
   res.status(200).json({ status: 200, product, success: true });
 };
 
 /**
- * Get all products controller
+ * Get one product for specific merchantId controller
  * @param req
  * @param res
  * @return {Promise<void>}
  */
 
-const getProducts = async (req: Request, res: Response): Promise<void> => {
+const getOneProductForMerchantId = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  let user = await User.findById(req.currentUser!.id);
+  if (!user) {
+    logger.error(`User is not found.`);
+    throw new BadRequestError('User not found.');
+  }
+
+  if (user?.role !== RolesType.Admin) {
+    logger.error(
+      `${user.email} try to show logger file but he don't have permission.`
+    );
+    throw new BadRequestError("you don't have permission to do this action");
+  }
+
+  const { merchantId, title } = req.query;
+
+  const product = await Product.findOne({ merchantId, title });
+
+  if (!product) {
+    logger.error(`product not found`);
+    throw new BadRequestError('product not found');
+  }
+
+  logger.info(`${product}`);
+  res.status(200).json({ status: 200, product, success: true });
+};
+
+/**
+ * Get all products controller
+ * @param _req
+ * @param res
+ * @return {Promise<void>}
+ */
+
+const getProducts = async (_req: Request, res: Response): Promise<void> => {
   const products = await Product.find({});
 
   if (products.length === 0) {
+    logger.error(`there is no products`);
     throw new BadRequestError('there is no products.');
   }
 
+  logger.info(`${products}`);
   res.status(200).send({ status: 200, products, success: true });
 };
 
@@ -185,6 +259,7 @@ const updateProduct = async (req: Request, res: Response): Promise<void> => {
   const product = await Product.findById(req.query.id);
 
   if (!product) {
+    logger.error(`product is not found!`);
     throw new BadRequestError('product is not found!');
   }
 
@@ -257,6 +332,7 @@ const updateProduct = async (req: Request, res: Response): Promise<void> => {
 
   _.extend(product, req.body);
   await product.save();
+  logger.info(`user ${product.merchantId} update productId : ${product.id} `);
 
   res.status(200).json({
     status: 200,
@@ -277,19 +353,23 @@ const deleteProduct = async (req: Request, res: Response): Promise<void> => {
     !req.query.productId ||
     !mongoose.Types.ObjectId.isValid(String(req.query.productId))
   ) {
+    logger.error(`${req.query.productId} is invalid`);
     throw new BadRequestError('productId is invalid.');
   }
 
   const product = await Product.findById(req.query.productId);
   if (!product) {
+    logger.error(`product is not found!`);
     throw new BadRequestError('product is not found!');
   }
 
   if (product.merchantId !== req.currentUser!.id) {
+    logger.error('you can delete only your products!');
     throw new BadRequestError('you can delete only your products!');
   }
 
   await product.deleteOne();
+  logger.info(`productId : ${product.id} is deleted successfully`);
   res.send({
     status: 204,
     message: 'Product has been deleted Successfully!',
@@ -307,9 +387,11 @@ const deleteProduct = async (req: Request, res: Response): Promise<void> => {
 const deleteAllProduct = async (req: Request, res: Response): Promise<void> => {
   const products = await Product.deleteMany({});
   if (!products) {
-    throw new BadRequestError('product is not found!');
+    logger.error('there is no products');
+    throw new BadRequestError('there is no products');
   }
 
+  logger.info('Products has been deleted Successfully!');
   res.send({
     status: 204,
     message: 'Products has been deleted Successfully!',
@@ -327,12 +409,11 @@ const deleteAllProduct = async (req: Request, res: Response): Promise<void> => {
 const searchProduct = async (req: Request, res: Response): Promise<void> => {
   const { title, price } = req.query;
   if (!title) {
+    logger.error('you must defined title query');
     throw new BadRequestError('you must defined title query');
   }
 
   const products = await Product.find({});
-
-  console.log(products);
 
   const productsFilter = products.filter(
     (product) =>
@@ -343,10 +424,48 @@ const searchProduct = async (req: Request, res: Response): Promise<void> => {
   );
 
   if (products.length === 0 || productsFilter.length === 0) {
+    logger.error('there is no products');
     throw new BadRequestError('there is no products');
   }
 
+  logger.info(`filterProducts : ${productsFilter}`);
   res.status(200).send({ status: 200, product: productsFilter, success: true });
+};
+
+/**
+ * Read logger files controller
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+
+const logReader = async (req: Request, res: Response): Promise<void> => {
+  let user = await User.findById(req.currentUser!.id);
+  if (!user) {
+    logger.error(`User is not found.`);
+    throw new BadRequestError('User not found.');
+  }
+
+  if (user?.role !== RolesType.Admin) {
+    logger.error(
+      `${user.email} try to show logger file but he don't have permission.`
+    );
+    throw new BadRequestError("you don't have permission to do this action");
+  }
+
+  const data = fs
+    .readFileSync('/app/src/services/log/product.log', {
+      encoding: 'utf8',
+    })
+    .split('\n')
+    .pop();
+
+  res.send({
+    status: 200,
+    data,
+    message: 'Successfully show logger file',
+    success: true,
+  });
 };
 
 export {
@@ -358,4 +477,6 @@ export {
   deleteAllProduct,
   updateProduct,
   searchProduct,
+  logReader,
+  getOneProductForMerchantId,
 };
