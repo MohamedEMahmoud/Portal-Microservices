@@ -17,3 +17,11 @@ export * from './middlewares/logger.services';
 export * from './types/gender-type';
 export * from './types/roles-type';
 export * from './types/profile-picture';
+
+// events
+export * from './events/base-listener';
+export * from './events/base-publisher';
+export * from './events/subjects';
+export * from './events/user-created-event';
+export * from './events/user-updated-event';
+export * from './events/user-deleted-event';
