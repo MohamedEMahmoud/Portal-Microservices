@@ -2,22 +2,26 @@ import { Stan } from 'node-nats-streaming';
 import { Subjects } from './subjects';
 
 interface Event {
-  subject: { [key: string]: Subjects; };
+  subject: Subjects;
   data: any;
 }
 
 export abstract class Publisher<T extends Event> {
+  abstract subject: T['subject'];
+  protected client: Stan;
 
-  constructor(protected client: Stan) { }
+  constructor(client: Stan) {
+    this.client = client;
+  }
 
-  publish(data: T['data'], subject: T['subject']['key']): Promise<void> {
+  publish(data: T['data']): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.client.publish(subject, JSON.stringify(data), (err) => {
+      this.client.publish(this.subject, JSON.stringify(data), (err) => {
         if (err) {
           reject(err);
         }
 
-        console.log(`Even Published to subject ${subject}`);
+        console.log(`Even Published to subject ${this.subject}`);
         resolve();
       });
     });
