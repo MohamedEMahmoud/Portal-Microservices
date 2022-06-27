@@ -7,13 +7,12 @@ const dateFormat = () => {
 class LoggerService {
   logger!: winston.Logger;
 
-  constructor(public route: string) {
+  constructor(public route: string, public filename: string) {
     let logger = winston.createLogger({
       level: 'info',
       format: winston.format.printf((info) => {
-        let message = `${dateFormat()} | ${info.level.toUpperCase()} | ${
-          info.message
-        }`;
+        let message = `${dateFormat()} | ${info.level.toUpperCase()} | ${info.message
+          }`;
 
         return (message = info.obj
           ? message + `data ${JSON.stringify(info.obj)} |`
@@ -22,12 +21,12 @@ class LoggerService {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: __dirname + `${process.env.LOG_FILE_PATH}/${route}.log`,
+          filename: `${filename}${process.env.LOG_FILE_PATH}/${route}.log`,
         }),
       ],
     });
 
-    console.log(__dirname + `${process.env.LOG_FILE_PATH}/${route}.log`);
+    console.log(`${filename}${process.env.LOG_FILE_PATH}/${route}.log`);
 
     this.logger = logger;
   }
