@@ -2,7 +2,9 @@ import { RolesType } from '../types/roles-type';
 import { Subjects } from './subjects';
 
 export interface UserUpdatedEvent {
-  subject: Subjects.UserUpdated;
+  subject: {
+    UserUpdated: Subjects.UserUpdated
+};
   data: {
     id: string;
     email?: string;

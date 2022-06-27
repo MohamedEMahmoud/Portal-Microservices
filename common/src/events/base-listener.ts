@@ -1,21 +1,17 @@
 import { Stan, Message } from 'node-nats-streaming';
-import { Subjects } from './subjects';
 
 interface Event {
-  subject: Subjects;
+  subject: any;
   data: any;
 }
 
 export abstract class Listener<T extends Event> {
-  abstract subject: T['subject'];
+  abstract subject: T['subject']['key'];
   abstract queueGroupName: string;
   abstract onMessage(data: T['data'], msg: Message): void;
-  protected client: Stan;
   protected ackWait = 5 * 1000;
 
-  constructor(client: Stan) {
-    this.client = client;
-  }
+  constructor(protected client: Stan) { }
 
   subscriptionOptions() {
     return this.client

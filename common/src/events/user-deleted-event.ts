@@ -1,7 +1,9 @@
 import { Subjects } from './subjects';
 
 export interface UserDeletedEvent {
-  subject: Subjects.UserDeleted;
+  subject: {
+    UserUpdated: Subjects.UserDeleted;
+  };
   data: {
     id: string;
   };
