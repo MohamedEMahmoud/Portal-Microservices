@@ -49,3 +49,7 @@ spec:
                 secretKeyRef:
                   name: session-secret
                   key: SESSION_SECRET
+            - name: LOG_FILE_PATH
+              value: /app/src/log
+            - name: LOG_FILE_NAME
+              value: product.log              

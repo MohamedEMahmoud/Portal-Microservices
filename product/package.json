@@ -10,7 +10,7 @@
   "author": "Muhammed Mustafa",
   "license": "ISC",
   "dependencies": {
-    "@portal-microservices/common": "^1.0.18",
+    "@portal-microservices/common": "^1.0.21",
     "@swc/core": "^1.2.205",
     "@swc/wasm": "^1.2.205",
     "@types/compression": "^1.7.2",

@@ -1,9 +1,9 @@
 import {
-  Subjects,
   Publisher,
   UserCreatedEvent,
 } from '@portal-microservices/common';
+import { natsWrapper } from '../../nats-wrapper';
 
-export class UserCreatedPublisher extends Publisher<UserCreatedEvent> {
-  readonly subject = Subjects.UserCreated;
-}
+export class UserCreatedPublisher extends Publisher<UserCreatedEvent> { }
+
+

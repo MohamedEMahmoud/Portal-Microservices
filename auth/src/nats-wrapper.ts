@@ -1,7 +1,7 @@
 import nats, { Stan } from 'node-nats-streaming';
 import { LoggerService } from '@portal-microservices/common';
 
-const logger = new LoggerService('nats-wrapper');
+const logger = new LoggerService('auth');
 
 class NatsWrapper {
   private _client?: Stan;
@@ -20,7 +20,7 @@ class NatsWrapper {
 
     return new Promise((resolve, reject) => {
       this.client.on('connect', () => {
-        logger.info('Connected to Nats Successfully...');
+        logger.info('Connected to Nats Successfully... From Auth Service');
         resolve();
       });
 

@@ -22,7 +22,7 @@ const logger = new LoggerService('product');
  */
 
 const createNewProduct = async (req: Request, res: Response): Promise<void> => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
 
   if (!req.body) {
     logger.error("Can't not send Empty Request");
@@ -254,7 +254,7 @@ const getProducts = async (_req: Request, res: Response): Promise<void> => {
  */
 
 const updateProduct = async (req: Request, res: Response): Promise<void> => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
 
   const product = await Product.findById(req.query.id);
 
@@ -454,11 +454,11 @@ const logReader = async (req: Request, res: Response): Promise<void> => {
   }
 
   const data = fs
-    .readFileSync('/app/src/services/log/product.log', {
+    .readFileSync(`${process.env.LOG_FILE_PATH}/${process.env.LOG_FILE_NAME}`, {
       encoding: 'utf8',
     })
     .split('\n')
-    .pop();
+    .filter(text => text.length);
 
   res.send({
     status: 200,

@@ -6,7 +6,7 @@ import { UserCreatedListener } from './events/listeners/user-created-listener';
 import { UserUpdatedListener } from './events/listeners/user-updated-listener';
 import { UserDeletedListener } from './events/listeners/user-deleted-listener';
 import { natsWrapper } from './nats-wrapper';
-let logger = new LoggerService('index');
+let logger = new LoggerService('product');
 
 const start = async () => {
   const Environment = [
@@ -20,6 +20,8 @@ const start = async () => {
     'NATS_CLIENT_ID',
     'NATS_CLUSTER_ID',
     'SESSION_SECRET',
+    'LOG_FILE_PATH',
+    'LOG_FILE_NAME'
   ];
   Environment.forEach((el) => {
     if (!process.env[el]) {

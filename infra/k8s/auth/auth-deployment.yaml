@@ -92,4 +92,6 @@ spec:
             - name: COUNTRY_CODE
               value: '+20'
             - name: LOG_FILE_PATH
-              value: /log
+              value: /app/src/log
+            - name: LOG_FILE_NAME
+              value: auth.log

@@ -4,7 +4,7 @@ import { app } from './app';
 import { LoggerService } from '@portal-microservices/common';
 import { natsWrapper } from './nats-wrapper';
 
-let logger = new LoggerService('index');
+let logger = new LoggerService('auth');
 
 (async () => {
   const Environment = [
@@ -29,6 +29,7 @@ let logger = new LoggerService('index');
     'FACEBOOK_APP_ID',
     'FACEBOOK_APP_SECRET',
     'LOG_FILE_PATH',
+    'LOG_FILE_NAME'
   ];
 
   Environment.forEach((el) => {
