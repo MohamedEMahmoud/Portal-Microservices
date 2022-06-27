@@ -7,7 +7,7 @@ const dateFormat = () => {
 class LoggerService {
   logger!: winston.Logger;
 
-  constructor(public route: string, public filename: string) {
+  constructor(public route: string) {
     let logger = winston.createLogger({
       level: 'info',
       format: winston.format.printf((info) => {
@@ -21,12 +21,10 @@ class LoggerService {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: `${filename}${process.env.LOG_FILE_PATH}/${route}.log`,
+          filename: `${process.env.LOG_FILE_PATH}/${route}.log`,
         }),
       ],
     });
-
-    console.log(`${filename}${process.env.LOG_FILE_PATH}/${route}.log`);
 
     this.logger = logger;
   }
