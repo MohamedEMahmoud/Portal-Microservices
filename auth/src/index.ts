@@ -29,7 +29,7 @@ let logger = new LoggerService('auth');
     'FACEBOOK_APP_ID',
     'FACEBOOK_APP_SECRET',
     'LOG_FILE_PATH',
-    'LOG_FILE_NAME'
+    'LOG_FILE_NAME',
   ];
 
   Environment.forEach((el) => {

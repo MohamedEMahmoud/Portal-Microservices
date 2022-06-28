@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import path from 'path';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import { v2 as Cloudinary } from 'cloudinary';
@@ -9,7 +8,6 @@ import {
   ProfilePictureType,
   RolesType,
   LoggerService,
-  Subjects
 } from '@portal-microservices/common';
 import { User } from '../models/user.model';
 import { randomBytes } from 'crypto';
@@ -33,7 +31,7 @@ let logger = new LoggerService('auth');
  */
 
 const signUp = async (req: Request, res: Response): Promise<void> => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   const { email, username } = req.body;
   const existingUser = await User.findOne({ email });
@@ -88,7 +86,7 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
   user.macAddress!.push({ MAC: String(getNetworkAddress().MAC) });
 
   let activeKey = randomBytes(8).toString('hex');
-  const mail: { success: boolean; message: string; } | undefined =
+  const mail: { success: boolean; message: string } | undefined =
     await sendMail({
       email: user.email,
       username: user.username,
@@ -110,7 +108,7 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
         profilePicture: user.profilePicture,
         role: user.role,
         version: user.version,
-      }, Subjects.UserCreated);
+      });
     }
 
     logger.info(`${user.email} become a new user in the application`);
@@ -188,7 +186,7 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
     throw new BadRequestError(`${req.body.age} is Invalid age`);
   }
 
-  const files = req.files as { [fieldname: string]: Express.Multer.File[]; };
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   if (files.profilePicture) {
     await new Promise((resolve, reject) => {
@@ -221,7 +219,7 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
   _.extend(req.user, req.body);
   const savedData = await req.user.save();
   if (savedData) {
-    const bodyData: { [key: string]: string; } = {};
+    const bodyData: { [key: string]: string } = {};
 
     _.each(req.body, (value, key: string) => {
       const fields = ['email', 'username', 'profilePicture', 'role'];
@@ -236,7 +234,7 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
       id: savedData.id,
       ...bodyData,
       version: savedData.version,
-    }, Subjects.UserUpdated);
+    });
   }
 
   logger.info(`${req.user.email} update his information successfully`);
@@ -276,7 +274,7 @@ const deleteUser = async (req: Request, res: Response): Promise<void> => {
   req.session.jwt = null;
   await new UserDeletedPublisher(natsWrapper.client).publish({
     id: user.id,
-  }, Subjects.UserDeleted);
+  });
   logger.info(`${user.email} is deleted successfully...`);
 
   res
@@ -378,7 +376,7 @@ const deleteUsersByAdmin = async (
 
   await new UserDeletedPublisher(natsWrapper.client).publish({
     id: user.id,
-  }, Subjects.UserDeleted);
+  });
 
   res.send({
     status: 200,
@@ -418,7 +416,7 @@ const userActive = async (req: Request, res: Response): Promise<void> => {
     await new UserUpdatedPublisher(natsWrapper.client).publish({
       id: savedData.id,
       version: savedData.version,
-    }, Subjects.UserUpdated);
+    });
   }
 
   logger.info(`${user.email} is activate account successfully`);
@@ -442,7 +440,7 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
   const resetPasswordToken = randomBytes(8).toString('hex');
 
   if (req.query.service === 'MAIL') {
-    const mail: { success: boolean; message: string; } | undefined =
+    const mail: { success: boolean; message: string } | undefined =
       await sendMail({
         email: user.email,
         username: user.username,
@@ -461,7 +459,7 @@ const forgetPassword = async (req: Request, res: Response): Promise<void> => {
         await new UserUpdatedPublisher(natsWrapper.client).publish({
           id: savedData.id,
           version: savedData.version,
-        }, Subjects.UserUpdated);
+        });
       }
       logger.info(
         `${user.email} is received resetPasswordToken successfully in gmail`
@@ -558,7 +556,7 @@ const resetNewPassword = async (req: Request, res: Response): Promise<void> => {
     await new UserUpdatedPublisher(natsWrapper.client).publish({
       id: savedData.id,
       version: savedData.version,
-    }, Subjects.UserUpdated);
+    });
   }
   logger.info(`${req.user.email} reset password successfully.`);
 
@@ -586,7 +584,7 @@ const resendKey = async (req: Request, res: Response): Promise<void> => {
 
   const resendKey = randomBytes(8).toString('hex');
 
-  const mail: { success: boolean; message: string; } | undefined =
+  const mail: { success: boolean; message: string } | undefined =
     await sendMail({
       email: user.email,
       username: user.username,
@@ -610,7 +608,7 @@ const resendKey = async (req: Request, res: Response): Promise<void> => {
       await new UserUpdatedPublisher(natsWrapper.client).publish({
         id: savedData.id,
         version: savedData.version,
-      }, Subjects.UserUpdated);
+      });
     }
     logger.info(`resend key is sent successfully to ${user.email}`);
 
@@ -689,7 +687,7 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
           await new UserUpdatedPublisher(natsWrapper.client).publish({
             id: savedData.id,
             version: savedData.version,
-          }, Subjects.UserUpdated);
+          });
         }
         logger.info(`${user.email} change password successfully`);
       } else {
@@ -727,7 +725,7 @@ const getOtpCode = async (req: Request, res: Response): Promise<void> => {
 
   const otpCode = Math.floor(Math.random() * 90000);
 
-  const mail: { success: boolean; message: string; } | undefined =
+  const mail: { success: boolean; message: string } | undefined =
     await sendMail({
       email: user.email,
       username: user.username,
@@ -744,7 +742,7 @@ const getOtpCode = async (req: Request, res: Response): Promise<void> => {
       await new UserUpdatedPublisher(natsWrapper.client).publish({
         id: savedData.id,
         version: savedData.version,
-      }, Subjects.UserUpdated);
+      });
     }
     logger.info(`${user.email} receive otpCode Successfully`);
   }
@@ -849,14 +847,11 @@ const logReader = async (req: Request, res: Response): Promise<void> => {
     throw new BadRequestError("you don't have permission to do this action");
   }
   const data = fs
-    .readFileSync(
-      `${process.env.LOG_FILE_PATH}/${process.env.LOG_FILE_NAME}`,
-      {
-        encoding: 'utf8',
-      }
-    )
+    .readFileSync(`${process.env.LOG_FILE_PATH}/${process.env.LOG_FILE_NAME}`, {
+      encoding: 'utf8',
+    })
     .split('\n')
-    .filter(text => text.length);
+    .filter((text) => text.length);
 
   res.send({
     status: 200,

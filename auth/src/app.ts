@@ -37,8 +37,8 @@ app.use(
   session({
     store: store,
     secret: process.env.SESSION_SECRET!,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: { secure: process.env.NODE_ENV !== 'test' },
   }),
   json(),
@@ -60,7 +60,7 @@ app.use(
   async () => {
     throw new NotFoundError();
   },
-  // errorHandler
+  errorHandler
 );
 
 export { app };
