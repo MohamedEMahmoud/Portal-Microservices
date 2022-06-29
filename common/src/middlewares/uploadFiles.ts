@@ -7,7 +7,7 @@ const upload = multer({ storage });
 
 const validationPhoto = (req: Request, _res: Response, next: NextFunction) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  const fields = ['profilePicture', 'thumbnail', 'images'];
+  const fields = ['profilePicture', 'thumbnail', 'images', 'image', 'logo'];
 
   fields.map((field) => {
     if (field in files) {
