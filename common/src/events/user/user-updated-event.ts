@@ -1,5 +1,5 @@
-import { RolesType } from '../types/roles-type';
-import { Subjects } from './subjects';
+import { Subjects } from '../subjects';
+import { RolesType } from '../../types/roles-type';
 
 export interface UserUpdatedEvent {
   subject: Subjects.UserUpdated;
