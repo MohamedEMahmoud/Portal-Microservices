@@ -30,3 +30,6 @@ export * from './events/user/user-deleted-event';
 export * from './events/coupon/coupon-created-event';
 export * from './events/coupon/coupon-updated-event';
 export * from './events/coupon/coupon-deleted-event';
+export * from './events/product/product-created-event';
+export * from './events/product/product-updated-event';
+export * from './events/product/product-deleted-event';
