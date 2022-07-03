@@ -8,4 +8,7 @@ export enum Subjects {
   CouponCreated = 'coupon:created',
   CouponUpdated = 'coupon:updated',
   CouponDeleted = 'coupon:deleted',
+  CartCreated = 'cart:created',
+  CartUpdated = 'cart:updated',
+  CartDeleted = 'cart:deleted',
 }

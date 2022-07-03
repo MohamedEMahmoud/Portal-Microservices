@@ -33,3 +33,6 @@ export * from './events/coupon/coupon-deleted-event';
 export * from './events/product/product-created-event';
 export * from './events/product/product-updated-event';
 export * from './events/product/product-deleted-event';
+export * from './events/cart/cart-created-event';
+export * from './events/cart/cart-updated-event';
+export * from './events/cart/cart-deleted-event';
