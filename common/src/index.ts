@@ -36,3 +36,6 @@ export * from './events/product/product-deleted-event';
 export * from './events/cart/cart-created-event';
 export * from './events/cart/cart-updated-event';
 export * from './events/cart/cart-deleted-event';
+export * from './events/order/order-created-event';
+export * from './events/order/order-updated-event';
+export * from './events/order/order-deleted-event';
