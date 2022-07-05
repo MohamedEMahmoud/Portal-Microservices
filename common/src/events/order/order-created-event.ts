@@ -7,9 +7,11 @@ export interface OrderCreatedEvent {
     customer: string;
     totalOrderPrice: number;
     shippingAddress: {
-      details: string;
+      name: string;
+      address: string;
       phone: string;
       city: string;
+      country: string;
       postalCode: string;
     };
     deliveredAt: string;
