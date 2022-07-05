@@ -4,7 +4,10 @@ export interface OrderCreatedEvent {
   subject: Subjects.OrderCreated;
   data: {
     id: string;
-    customer: string;
+    customer: {
+      id: string;
+      phone: string;
+    };
     totalOrderPrice: number;
     shippingAddress: {
       details: string;
