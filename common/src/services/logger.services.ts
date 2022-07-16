@@ -11,8 +11,9 @@ class LoggerService {
     let logger = winston.createLogger({
       level: 'info',
       format: winston.format.printf((info) => {
-        let message = `${dateFormat()} | ${info.level.toUpperCase()} | ${info.message
-          }`;
+        let message = `${dateFormat()} | ${info.level.toUpperCase()} | ${
+          info.message
+        }`;
 
         return (message = info.obj
           ? message + `data ${JSON.stringify(info.obj)} |`
@@ -25,6 +26,8 @@ class LoggerService {
         }),
       ],
     });
+
+    console.log(`${process.env.LOG_FILE_PATH}/${route}.log`);
 
     this.logger = logger;
   }
