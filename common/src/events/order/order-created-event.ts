@@ -6,6 +6,11 @@ export interface OrderCreatedEvent {
     id: string;
     customer: string;
     totalOrderPrice: number;
+    cartItems: {
+      product: string;
+      quantity: number;
+      price: number;
+    }[];
     shippingAddress: {
       name: string;
       address: string;
