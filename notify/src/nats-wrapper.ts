@@ -1,0 +1,34 @@
+import nats, { Stan } from 'node-nats-streaming';
+import { LoggerService } from '@portal-microservices/common';
+
+const logger = new LoggerService(process.env.LOG_FILE_NAME!);
+
+class NatsWrapper {
+  private _client?: Stan;
+
+  get client() {
+    if (!this._client) {
+      logger.error('Cannot access NATS client before connecting');
+      throw new Error('Cannot access NATS client before connecting');
+    }
+
+    return this._client;
+  }
+
+  connect(clusterId: string, clientId: string, url: string): Promise<void> {
+    this._client = nats.connect(clusterId, clientId, { url });
+
+    return new Promise((resolve, reject) => {
+      this.client.on('connect', () => {
+        console.log('Connected to Nats Successfully From Notify Service');
+        resolve();
+      });
+
+      this.client.on('error', (err) => {
+        reject(err);
+      });
+    });
+  }
+}
+
+export const natsWrapper = new NatsWrapper();

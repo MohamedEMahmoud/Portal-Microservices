@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: commerce-cluster-ip-service
+spec:
+  type: ClusterIP
+  selector:
+    app: commerce
+  ports:
+    - name: commerce
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

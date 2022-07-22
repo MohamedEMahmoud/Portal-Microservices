@@ -4,7 +4,7 @@ import { app } from './app';
 import { LoggerService } from '@portal-microservices/common';
 import { natsWrapper } from './nats-wrapper';
 
-let logger = new LoggerService('auth');
+let logger = new LoggerService(process.env.LOG_FILE_NAME!);
 
 (async () => {
   const Environment = [

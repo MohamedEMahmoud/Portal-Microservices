@@ -72,8 +72,6 @@ spec:
               value: '1//04GOvrAeym8V2CgYIARAAGAQSNwF-L9Ir6YA-8y-9Lr3jOtR45QTlBLDosbmJWoP32zG0t3ZkFu45kNGvvKT6TyYUCHZZcqvo2P8'
             - name: REDIRECT_URI
               value: 'https://developers.google.com/oauthplayground'
-            - name: MAIL_SERVER_PORT
-              value: '465'
             - name: PORT
               value: '3e3'
             - name: RESET_PASSWORD_EXPIRATION_KEY

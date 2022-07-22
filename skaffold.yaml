@@ -17,8 +17,53 @@ build:
           - src: 'src/**/*.ts'
             dest: .
 
-    - image: microservicesarchitecture99/product
-      context: product
+    - image: microservicesarchitecture99/commerce
+      context: commerce
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+
+    - image: microservicesarchitecture99/cart
+      context: cart
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+
+    - image: microservicesarchitecture99/order
+      context: order
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+
+    - image: microservicesarchitecture99/notify
+      context: notify
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+
+    - image: microservicesarchitecture99/wishlist
+      context: wishlist
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+
+    - image: microservicesarchitecture99/payment
+      context: payment
       docker:
         dockerfile: Dockerfile
       sync:

@@ -21,7 +21,8 @@ import { natsWrapper } from '../nats-wrapper';
 import { UserCreatedPublisher } from '../events/publishers/user-created-publisher';
 import { UserUpdatedPublisher } from '../events/publishers/user-updated-publisher';
 import { UserDeletedPublisher } from '../events/publishers/user-deleted-publisher';
-let logger = new LoggerService('auth');
+
+let logger = new LoggerService(process.env.LOG_FILE_NAME!);
 
 /**
  * Sign UP controller
@@ -113,7 +114,15 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
 
     logger.info(`${user.email} become a new user in the application`);
 
-    res.status(201).send({ status: 201, user, success: true });
+    res
+      .cookie('session', String(req.session.jwt), {
+        httpOnly: true,
+        secure: true,
+        sameSite: true,
+        signed: false,
+      })
+      .status(201)
+      .send({ status: 201, user, success: true });
   }
 };
 
@@ -153,12 +162,21 @@ const signIn = async (req: Request, res: Response): Promise<void> => {
   generateToken(req, user.id);
 
   logger.info(`the user : ${user.email} successfull login in application`);
-  res.status(200).send({ status: 200, user, success: true });
+  res
+    .cookie('session', String(req.session.jwt), {
+      httpOnly: true,
+      secure: true,
+      sameSite: true,
+      signed: false,
+    })
+    .status(200)
+    .send({ status: 200, user, success: true });
 };
 
 const generateToken = (req: Request, id: string) => {
   const userJwt = jwt.sign({ id }, process.env.JWT_KEY!);
   req.session.jwt = userJwt;
+  return userJwt;
 };
 /**
  * Sign out controller by deleting his session
@@ -800,16 +818,26 @@ const getGoogleLogin = async (_req: Request, res: Response): Promise<void> => {
 
 /**
  * Get Google Callback controller
- * @param _req
+ * @param req
  * @param res
  * @return {Promise<void>}
  */
 const getGoogleCallback = async (
-  _req: Request,
+  req: Request,
   res: Response
 ): Promise<void> => {
   logger.info('getGoogleCallback Successfully');
-  res.status(200).send({ status: 200, success: true });
+  const userJwt = generateToken(req, req.user.id);
+  console.log(userJwt, req.user.id);
+  res
+    .cookie('session', userJwt, {
+      httpOnly: true,
+      secure: true,
+      sameSite: true,
+      signed: false,
+    })
+    .status(200)
+    .send({ status: 200, success: true });
 };
 
 /**
@@ -846,6 +874,7 @@ const logReader = async (req: Request, res: Response): Promise<void> => {
     );
     throw new BadRequestError("you don't have permission to do this action");
   }
+
   const data = fs
     .readFileSync(`${process.env.LOG_FILE_PATH}/${process.env.LOG_FILE_NAME}`, {
       encoding: 'utf8',

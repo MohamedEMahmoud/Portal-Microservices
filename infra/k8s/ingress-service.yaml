@@ -22,10 +22,42 @@ spec:
                 port:
                   number: 3000
 
-          - path: /api/product/?(.*)
+          - path: /api/commerce/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: product-cluster-ip-service
+                name: commerce-cluster-ip-service
+                port:
+                  number: 3000
+
+          - path: /api/cart/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: cart-cluster-ip-service
+                port:
+                  number: 3000
+
+          - path: /api/order/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: order-cluster-ip-service
+                port:
+                  number: 3000
+
+          - path: /api/wishlist/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: wishlist-cluster-ip-service
+                port:
+                  number: 3000
+
+          - path: /api/payment/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: payment-cluster-ip-service
                 port:
                   number: 3000

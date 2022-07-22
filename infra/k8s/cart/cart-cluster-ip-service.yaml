@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-cluster-ip-service
+spec:
+  type: ClusterIP
+  selector:
+    app: cart
+  ports:
+    - name: cart
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commerce-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: commerce
+  template:
+    metadata:
+      labels:
+        app: commerce
+    spec:
+      containers:
+        - name: commerce
+          image: microservicesarchitecture99/commerce
+          env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-cluster-ip-service:4222'
+            - name: NATS_CLUSTER_ID
+              value: portal
+            - name: MONGO_URI
+              value: mongodb://commerce-mongo-cluster-ip-service:27017/commerce
+            - name: CLOUDINARY_NAME
+              value: microservices
+            - name: CLOUDINARY_API_KEY
+              value: '811727343751112'
+            - name: CLOUDINARY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudinary-secret
+                  key: CLOUDINARY_SECRET_KEY
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: PORT
+              value: '3e3'
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: session-secret
+                  key: SESSION_SECRET
+            - name: LOG_FILE_PATH
+              value: /app/src/log
+            - name: LOG_FILE_NAME
+              value: commerce.log

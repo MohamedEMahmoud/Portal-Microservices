@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notify-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notify
+  template:
+    metadata:
+      labels:
+        app: notify
+    spec:
+      containers:
+        - name: notify
+          image: microservicesarchitecture99/notify
+          env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-cluster-ip-service:4222'
+            - name: NATS_CLUSTER_ID
+              value: portal
+            - name: REDIS_HOST
+              value: notify-redis-cluster-ip-service
+            - name: TWILIO_ACCOUNT_SID
+              value: AC40964f75d8df8dc8dfe1e787ce877eb3
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: twilio-auth-token
+                  key: TWILIO_AUTH_TOKEN
+            - name: TWILIO_PHONE_NUMBER
+              value: '+19362515983'
+            - name: LOG_FILE_PATH
+              value: /app/src/log
+            - name: LOG_FILE_NAME
+              value: notify.log

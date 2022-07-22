@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      containers:
+        - name: payment
+          image: microservicesarchitecture99/payment
+          env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-cluster-ip-service:4222'
+            - name: NATS_CLUSTER_ID
+              value: portal
+            - name: MONGO_URI
+              value: mongodb://payment-mongo-cluster-ip-service:27017/payment
+            - name: CLOUDINARY_NAME
+              value: microservices
+            - name: CLOUDINARY_API_KEY
+              value: '811727343751112'
+            - name: CLOUDINARY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudinary-secret
+                  key: CLOUDINARY_SECRET_KEY
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: session-secret
+                  key: SESSION_SECRET
+            - name: ENCRYPT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: encrypt-secret-key
+                  key: ENCRYPT_SECRET_KEY
+            - name: algorithm
+              value: 'aes-256-ctr'
+            - name: PORT
+              value: '3e3'
+            - name: STRIPE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-secret
+                  key: STRIPE_KEY
+            - name: LOG_FILE_PATH
+              value: /app/src/log
+            - name: LOG_FILE_NAME
+              value: payment.log

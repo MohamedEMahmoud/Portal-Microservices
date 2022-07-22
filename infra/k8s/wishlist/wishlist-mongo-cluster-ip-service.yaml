@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wishlist-mongo-cluster-ip-service
+spec:
+  type: ClusterIP
+  selector:
+    app: wishlist-mongo
+  ports:
+    - name: db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

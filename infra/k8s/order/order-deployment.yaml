@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+        - name: order
+          image: microservicesarchitecture99/order
+          env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-cluster-ip-service:4222'
+            - name: NATS_CLUSTER_ID
+              value: portal
+            - name: MONGO_URI
+              value: mongodb://order-mongo-cluster-ip-service:27017/order
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: PORT
+              value: '3e3'
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: session-secret
+                  key: SESSION_SECRET
+            - name: LOG_FILE_PATH
+              value: /app/src/log
+            - name: LOG_FILE_NAME
+              value: order.log
+            - name: taxPrice
+              value: '10'
+            - name: shippingPrice
+              value: '20'

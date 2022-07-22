@@ -24,29 +24,27 @@ passport.use(
       callbackURL: 'https://portal-microservices.dev/api/auth/google/callback',
       passReqToCallback: true,
     },
-    (
-      _req: Request,
+    async (
+      req: Request,
       _accessToken: any,
       _refreshToken: any,
       profile: any,
       done: (arg0: null, arg1: any) => void
     ) => {
-      User.findOne({ googleId: profile.id }).then((existingUser) => {
-        if (existingUser) {
-          // we already have a record with the given profile ID
-          done(null, existingUser);
-        } else {
-          // we don't have a user record with this ID, make a new record!
-          User.build({
-            googleId: profile.id,
-            username: profile.name.givenName,
-            email: profile.emails[0].value,
-            profilePicture: profile.picture,
-          })
-            .save()
-            .then((user) => done(null, user));
-        }
+      const user = await User.findOne({ googleId: profile.id });
+      if (user) {
+        done(null, user);
+      }
+      const newUser = User.build({
+        googleId: profile.id,
+        username: profile.displayName,
+        email: profile.emails[0].value,
+        profilePicture: profile.picture,
       });
+
+      req.user = newUser;
+      newUser.save();
+      done(null, newUser);
     }
   )
 );

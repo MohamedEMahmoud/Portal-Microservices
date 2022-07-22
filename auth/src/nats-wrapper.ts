@@ -1,7 +1,7 @@
 import nats, { Stan } from 'node-nats-streaming';
 import { LoggerService } from '@portal-microservices/common';
 
-const logger = new LoggerService('auth');
+const logger = new LoggerService(process.env.LOG_FILE_NAME!);
 
 class NatsWrapper {
   private _client?: Stan;
